@@ -4,7 +4,7 @@
 # Compare first directory file hashes against the file hashes in any number of other directories
 # that match search string. Then list all files that have matching hashes and those that do not.
 # Note, if array is passed, regex is ignored
-param([Parameter(ValueFromPipeline=$false)][regex]$regex,[Parameter(ValueFromPipeline=$true)][Array]$array, [Parameter()][bool]$markMatches=$false)
+param([Parameter(ValueFromPipeline=$false)][regex]$regex,[Parameter(ValueFromPipeline=$true)][Array]$array, [Parameter()][switch]$markMatches)
 if ($array -ne $null) {
     echo $array
     $dirArr = $array;
@@ -26,7 +26,13 @@ for ($i; $i -lt $dirArr.Length; $i++)
 {
     echo $($dirArr[0] | select -ExpandProperty fullname) vs. $($dirArr[$i] | select -ExpandProperty fullname);
     # echo "Files in $(($dirArr[$i]).fullname) without a hash twin in $(($dirArr[0]).fullname):"
-    echo "No hash twin in $(($dirArr[0]).fullname) for:`n"
+    if ($markMatches) 
+    {
+        echo "No hash twin in $(($dirArr[0]).fullname) for:`n"
+    } elseif ($markMatches -ne $true)
+    {
+        echo "Hash twin exists in $(($dirArr[0]).fullname) for:`n"
+    }
     $selectedFilesArr = [Array] $($dirArr[$i] | ls | where { $_.attributes -ne 'Directory' })
     $selectedFileHashesArr = [Array] $($selectedFilesArr | % {$_|Get-FileHash})
     $selectedFileHashesArr | % { # for each Hash of currently selected Dir...
@@ -43,12 +49,12 @@ for ($i; $i -lt $dirArr.Length; $i++)
                 $found = $true;
             }
         }
-        if ($found -eq $false -and $markMatches -eq $false)
+        if ($found -eq $true -and $markMatches) {
+            echo "$(($selectedHashedFile).path)"
+        } 
+        elseif ($found -eq $false -and $markMatches -ne $true)
         {
             # echo "File: $(($_).path)"
-            echo "$(($selectedHashedFile).path)"
-        }
-        if ($found -eq $true -and $markMatches -eq $true) {
             echo "$(($selectedHashedFile).path)"
         }
     }
