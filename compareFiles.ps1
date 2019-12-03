@@ -2,8 +2,10 @@
 # Isaiah Grambo 2019-11-13
 ##################################################################
 # Compare first directory file hashes against the file hashes in any number of other directories
-# that match search string. Then list all files that have matching hashes and those that do not.
-# Note, if array is passed, regex is ignored
+# that match search string. Then list all files that do not have matching hashes -OR- if -markMatches flag is
+# specified, list all files that have matching hashes.
+# Notes:    
+#       1. If array is passed, regex is ignored.
 param([Parameter(ValueFromPipeline=$false)][regex]$regex,[Parameter(ValueFromPipeline=$true)][Array]$array, [Parameter()][switch]$markMatches)
 if ($array -ne $null) {
     echo $array
@@ -29,7 +31,7 @@ for ($i; $i -lt $dirArr.Length; $i++)
     if ($markMatches) 
     {
         echo "No hash twin in $(($dirArr[0]).fullname) for:`n"
-    } elseif ($markMatches -ne $true)
+    } else
     {
         echo "Hash twin exists in $(($dirArr[0]).fullname) for:`n"
     }
