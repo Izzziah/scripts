@@ -14,6 +14,7 @@ param(
     [Parameter()][switch]$markMatches,
     [Parameter()][int16]$base = 0,
     [Parameter()][switch]$justFiles
+    # ,[Parameter()][switch]$startDiff
 )
 
 if ($array -ne $null) {
@@ -43,7 +44,7 @@ $refFilesHashes = [Array] $($refFiles | % {$_|Get-FileHash});
 #now compare against other dirs
 for ($i; $i -lt $dirArr.Length; $i++)
 {
-    $matches = 0;
+    $matchCount = 0;
     if ($justFiles -ne $true)
     {
         echo $($dirArr[0] | select -ExpandProperty fullname) vs. $($dirArr[$i] | select -ExpandProperty fullname);
@@ -71,7 +72,7 @@ for ($i; $i -lt $dirArr.Length; $i++)
             {
                 # echo "$(($selectedHashedFile).path)`n$(($_).path)"
                 $found = $true;
-                $matches++;
+                $matchCount++;
             }
         }
         if ($found -eq $true -and $markMatches) {
@@ -85,7 +86,7 @@ for ($i; $i -lt $dirArr.Length; $i++)
     }
     if ($markMatches -and $justFiles -ne $true)
     {
-        echo "matches found: $matches";
+        echo "matches found: $matchCount";
     }
     if ($justFiles -ne $true)
     {
