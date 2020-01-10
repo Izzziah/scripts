@@ -3,8 +3,8 @@ param(
     [Parameter()]$replace,
     [Parameter()]$path,
     [Parameter()]$scrub=$null) 
-$diff1 = ".\$($find)diff"
-$diff2 = ".\$($replace)diff"
+$diff1 = ".\$($find).diff"
+$diff2 = ".\$($replace).diff"
 
 if ($path -notmatch $find)
 {
