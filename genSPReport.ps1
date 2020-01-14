@@ -9,7 +9,8 @@ $savePath += ".txt";
 
 if ($save)
 {
-    $xml = new-object -typename xml; ls -filter *.rdl | % {
+    $xml = new-object -typename xml; 
+    ls -filter *.rdl | % {
         write-output "$_"; 
         $xml.load($_.fullname); 
         $tbl = $xml.Report.DataSets.DataSet.Query; 
