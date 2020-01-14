@@ -1,3 +1,13 @@
+# compareFiles.ps1
+# Isaiah Grambo 2019-11-13
+##################################################################
+# Generate list of files that have matching names or implentations comparision made against files within supplied
+# list of Source Directories against supplied list of Comparison Directories.
+#assumptions: 
+# 1. $srcDirs contains dirs with >= files than $cprDirs
+# 2. All directories within $srcDirs and $cprDirs have at least 1 .rpl file within (theoretically could work with 
+#    different file types: need at least 1 file in each)
+
 param(
     [System.IO.DirectoryInfo[]]$srcDirs,
     [System.IO.DirectoryInfo[]]$cprDirs,
