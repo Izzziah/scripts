@@ -8,19 +8,71 @@ param(
 foreach($srcDir in $srcDirs)
 {
     #list out srcDir
-    Write-Output "## Directory: $($srcDir.name)"
+    $srcDirNamed = $false
     # filter out non rpl files
     [System.IO.FileInfo[]]$srcFiles = $($srcDir.GetFiles() | where {$_.name -match $filterString})
     #forEach srcFile in srcDir:
     foreach ($srcFile in $srcFiles)
     {
         #list out srcFile
-        Write-Output "`t###  File: $($srcFile.name)"
+        $srcFileNamed = $false
         #forEach cprDir in cprDirs:
         foreach ($cprDir in $($cprDirs | where {$_.GetType() -eq [System.IO.DirectoryInfo]}))
         {
+
+            # need to calculate unique names
+            #region Unique Name Calculation #
+            $srcPathArr = $srcDir.fullname -split '\\';
+            $cprPathArr = $cprDir.fullname -split '\\';
+            $srcUniqueName = '';
+            $cprUniqueName = '';
+        
+            $index = 0;
+        
+            $max = if ($srcPathArr.length -lt $cprPathArr.length) { $srcPathArr.length } else { $cprPathArr.length }
+            
+            $lastMatch = $null;
+            while ($index -lt $max -and $srcPathArr[$index] -eq $cprPathArr[$index])
+            {
+                $lastMatch = $srcPathArr[$index++]
+            }
+        
+            if ($lastMatch -ne $null)
+            {
+                # $srcUniqueName = $cprUniqueName = $lastMatch;
+                for ($i = $index; $i -lt $srcPathArr.length; $i++)
+                {
+                    $srcUniqueName += "\$($srcPathArr[$i])"
+                }
+                for ($i = $index; $i -lt $cprPathArr.length; $i++)
+                {
+                    $cprUniqueName += "\$($cprPathArr[$i])"
+                }
+            }
+            else
+            {
+                $srcUniqueName = $srcDir.fullname
+                $cprUniqueName = $cprDir.fullname
+            }
+            #endregion Unique Name Calculation #
+
+            # now that unique names have been calculated, print out unique src names:
+            #region Source Directory Labeling
+            if ($srcDirNamed -eq $false)
+            {
+                Write-Output "## Directory: $($srcUniqueName)"
+                $srcDirNamed = $true;
+            }
+            if ($srcFileNamed -eq $false)
+            {
+                Write-Output "`t###  File: $($srcFile.name)"
+                $srcFileNamed = $true
+            }
+            #endregion Source Directory Labeling
+
             $addedItem = $false
-            $str = "`t`tFor Directory: $($cprDir.name)`n"
+            $str = "`t`tFor Directory: $($cprUniqueName)`n"
+
             # filter out non rpl files
             [System.IO.FileInfo[]]$cprFiles = $($cprDir.GetFiles() | where {$_.name -match $filterString})
             #search each cprFile in cprDir for name that matches srcFile.name
