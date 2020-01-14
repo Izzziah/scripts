@@ -5,9 +5,16 @@
 # that match search string. Then list all files that do not have matching hashes -OR- if -markMatches flag is
 # specified, list all files that have matching hashes.
 # Notes:    
-#       1. If array is passed, regex is ignored.
-#       2. the $base is passed an index in the list of directories found, that directory will be used
-#          as the base reference which all hashes will be checked against
+#  1. If array is passed, regex is ignored.
+#  2. the $base is passed an index in the list of directories found, that directory will be used
+#     as the base reference which all hashes will be checked against
+# Known Issues:
+#  1. While using the -markMatches flag, only the first non-reference file that matches the 
+#     reference file's hash will be listed as matching, however the 'matches found: ' will show the
+#     to total number of matching hashes found. Any time that the 'matches found: ' shows more matches 
+#     than are listed, it should be assumed that there exist two files with matching implementations within
+#     the corresponding non-reference directory.
+
 param(
     [Parameter(ValueFromPipeline=$false)][regex]$regex,
     [Parameter(ValueFromPipeline=$false)][Array]$array, 
