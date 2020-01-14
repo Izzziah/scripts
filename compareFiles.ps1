@@ -10,18 +10,18 @@
 #          as the base reference which all hashes will be checked against
 param(
     [Parameter(ValueFromPipeline=$false)][regex]$regex,
-    [Parameter(ValueFromPipeline=$true)][Array]$array, 
+    [Parameter(ValueFromPipeline=$false)][Array]$array, 
     [Parameter()][switch]$markMatches,
-    [Parameter()][int16]$base = 0,
+    [Parameter(ValueFromPipeline=$false)][int16]$base = 0,
     [Parameter()][switch]$justFiles
     # ,[Parameter()][switch]$startDiff
 )
 
 if ($array -ne $null) {
-    if ($justFiles -ne $true) 
-    {
-        echo $array;
-    }
+    # if ($justFiles -ne $true) 
+    # {
+    #     echo $array;
+    # }
     $dirArr = $array;
 } else {
     $dirArr = @($(ls | where {$_.attributes -eq 'Directory' -and $_.name -match $regex}));
