@@ -1,7 +1,7 @@
 param(
-    [Parameter(ValueFromPipeline=$true)][System.IO.FileInfo[]]$files
+    [System.String]$searchString
     ,[System.String]$path='.'
-    ,[System.String]$searchString
+    ,[Parameter(ValueFromPipeline=$true)][System.IO.FileInfo[]]$files
 )
 echo "Searching for: $searchString`n`n"
 $xml = new-object -typename xml; 
