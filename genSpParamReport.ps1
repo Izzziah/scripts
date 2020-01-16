@@ -1,7 +1,8 @@
 param(
-    [System.String]$searchString
+    [System.String]$searchString='.*'
     ,[System.String]$path='.'
     ,[Parameter(ValueFromPipeline=$true)][System.IO.FileInfo[]]$files
+    ,[switch]$showQuery
 )
 echo "Searching for: $searchString`n`n"
 $xml = new-object -typename xml; 
@@ -20,14 +21,19 @@ ls -Path $path -filter *.rdl | % {
             }
             if ($_.CommandType -ne $null) {
                 # storedProc?
-                echo "`t###$($_.CommandType): $($_.CommandText)";
+                echo "`t> ### $($_.CommandType): $($_.CommandText)";
                 # echo "`tfound param: '$foundParam'";
-            } else {
+            } else 
+            {
+                $str = "`t> ### Query";
+                if ($showQuery) {
+                    $str += ": `n`t$($_.CommandText -replace '\s+',' ' -replace "from","`n`t`tfrom" -replace "where","`n`t where")";
+                }
                 # non-storedProc
-                echo "`t###Query: `n`t$($_.CommandText -replace '\s+',' ' -replace "from","`n`t`tfrom" -replace "where","`n`t where")";
+                echo $str;
                 # echo "`tfound param: '$foundParam'";
             }
-            echo "`t`t**found param**: '$foundParam'";
+            echo "`t`t'$($foundParam -replace '@{Name=','{')'";
         }
     }
 }
