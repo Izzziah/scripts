@@ -4,7 +4,7 @@ param(
     ,[Parameter(ValueFromPipeline=$true)][System.IO.FileInfo[]]$files
     ,[switch]$showQuery
 )
-echo "Searching for: $searchString`n`n"
+echo "Searching for: $searchString`n"
 $xml = new-object -typename xml; 
 
 ls -Path $path -filter *.rdl | % {
@@ -17,15 +17,15 @@ ls -Path $path -filter *.rdl | % {
         if ($foundParam -ne $null) {
             if ($writeTitle) {
                 $writeTitle = $false;
-                write-output "> $title"; 
+                write-output "### $title"; 
             }
             if ($_.CommandType -ne $null) {
                 # storedProc?
-                echo "`t> ### $($_.CommandType): $($_.CommandText)";
+                echo "`t$($_.CommandType): $($_.CommandText)";
                 # echo "`tfound param: '$foundParam'";
             } else 
             {
-                $str = "`t> ### Query";
+                $str = "`tQuery";
                 if ($showQuery) {
                     $str += ": `n`t$($_.CommandText -replace '\s+',' ' -replace "from","`n`t`tfrom" -replace "where","`n`t where")";
                 }
