@@ -95,7 +95,29 @@ foreach ($referenceObject in $referenceArray)
                 }
                 else # need to search for match order independent
                 {
-                    throw "OrderMatters Not Implemented"
+                    foreach ($refParam in $referenceParamArr)
+                    {
+                        $lastDex = $paramArr.Length-1;
+                        foreach ($i in @(0..$lastDex))
+                        {
+                            if ($paramArr[$i] -eq $refParam)
+                            { # remove each match (detect missing duplicate params)
+                                $newParamArr = @();
+                                foreach ($j in @(0..$lastDex-1))
+                                {
+                                    if ($j -ne $i)
+                                    { # take each val that isn't at matching param's index
+                                        $newParamArr += $paramArr[$i];
+                                    }
+                                }
+                                $paramArr = $newParamArr;
+                            }
+                        }
+                    }
+                    if ($paramArr.Length -gt 0)
+                    {
+                        $foundMismatch = $true;
+                    }
                 }
             } 
             else 
