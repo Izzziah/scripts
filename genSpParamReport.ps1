@@ -9,7 +9,8 @@ $xml = new-object -typename xml;
 
 ls -Path $path -filter *.rdl | % {
     $writeTitle = $true;
-    $title = $_.Name
+    $pathArr = ($_.FullName -split '\\');
+    $title = "$($pathArr[$pathArr.Length-2])/$($pathArr[$pathArr.Length-1])"
     $xml.load($_.fullname); 
     $tbl = $xml.Report.DataSets.DataSet.Query; 
     $tbl | % { 

@@ -1,12 +1,16 @@
+using namespace System.Text.RegularExpressions;
+
 param(
-    [switch]$orderMatters,
-    [switch]$byName,
-    [switch]$unique
+    # [switch]$orderMatters,
+    # [switch]$byName,
+    # [switch]$unique
+    [int]$minSignatures = 1
 )
 $path = '.\full_stored_proc_reference_parameter_report.report.md';
 $objectRegex = 'StoredProcedure:\s.+\n.*(?=\s+StoredProcedure|###|\sQuery)';
 $objectNameRegex = "(?<=StoredProcedure:\s)\S+(?=\s*\n\s+')";
 $paramRegex = '\{.+\}';
+# $paramSplitRegex = ' ';
 $rawText = cat $path -Raw;
 $objectArray = @(@($rawText | sls $objectRegex -AllMatches).Matches.Value);
 # $byName = $true;
@@ -18,126 +22,31 @@ $objectArray = @(@($rawText | sls $objectRegex -AllMatches).Matches.Value);
 # 1. setting $byName parameter to $true results in duplicate listings of storedProcs
 
 # TODO: Record line number for each object
+$objectNameArray = @($objectArray | sort -Unique | sls -Pattern $objectNameRegex).Matches.Value
 
-$referenceArray = @($objectArray | sort -Unique)
+[hashtable]$objectHashTable = @{};
 
-if ($unique -and $byName) {
-    $objectArray = $referenceArray.Clone();
-} elseif ($unique) {
-    throw "the -unique may only be used in combination with the -byName flag";
+$objectNameArray | % { $objectHashTable[$_] = @{} }
+
+foreach ($object in $objectArray)
+{
+    $objectName = ($object | sls $objectNameRegex).Matches.Value;
+    
+    $paramString = ($object | sls $paramRegex -AllMatches).Matches.Value;
+    # [MatchCollection]$params = [System.Text.RegularExpressions.Regex]::Matches($paramString, $paramRegex);
+
+    $objectHashTable[$objectName][$paramString] += 1;
 }
 
-foreach ($referenceObject in $referenceArray) 
+foreach ($objectName in $objectHashTable.Keys)
 {
-    $referenceObject = ($referenceObject -replace
-        '\[','\[' -replace 
-        '\]','\]' -replace 
-        # '\{','\{' -replace 
-        # '\}','\}' -replace
-        '\.','\.' -replace
-        '\+','\');
-
-    $referenceObjectName = ($referenceObject | sls -Pattern $objectNameRegex).Matches.Value;
-    $referenceObjectName = ($referenceObjectName -replace 
-        '\s','' -replace 
-        '\[','\[' -replace 
-        '\]','\]' -replace 
-        # '\{','\{' -replace 
-        # '\}','\}' -replace
-        '\.','\.' -replace
-        '\\+','\'
-    );
-    $referenceParamArr = ($referenceObject | where { 
-        $_ -match $paramRegex } | sls -Pattern $paramRegex).Matches.Value;
-    # echo $referenceObject
-    # echo '--'
-    # echo "### Reference: $referenceObject"
-    # echo '--'
-    # echo "For: $referenceObjectName"
-    if ($byName) {
-        $matchArr = @($objectArray | where { 
-            $_ -match "\s+$referenceObjectName\s+" });
-
-        echo "## $($referenceObjectName -replace '\\','')";
-        echo "  Count: $($matchArr.Count)"
-
-        $matchArr | % {
-            echo "`t$($_ -replace "`n","`n`t")" 
-        }
-        continue; # skip mismatch logic
-    }
-
-    $mismatchArr = @($objectArray | where { 
-        $_ -match "\s+$referenceObjectName\s+" -and $_ -ne $referenceObject });
-    
-    # we have a list of objects that have matching names but do not match in other ways
-    
-    if ($mismatchArr.Length -gt 0) 
+    $objectReport = $objectHashTable[$objectName];
+    if ($objectReport.Count -ge $minSignatures)
     {
-        $verifiedMismatches = @(); # ready to hold results of mismatch verification logic
-        foreach ($mismatchObject in $mismatchArr)
-        { 
-            $paramArr = ($mismatchObject | where { $mismatchObject -match $paramRegex } | sls -Pattern $paramRegex).Matches.Value;
-            $foundMismatch = $false;
-            if ($paramArr.Length -eq $referenceParamArr.Length) 
-            {
-                $i = 0;
-                if ($orderMatters)
-                {
-                    foreach ($param in $paramArr) 
-                    {
-                        if ($mismatchObject -ne $referenceParamArr[$i++]) 
-                        {
-                            $foundMismatch = $true;
-                            break;
-                        }
-                    }
-                }
-                else # need to search for match order independent
-                {
-                    foreach ($refParam in $referenceParamArr)
-                    {
-                        $lastDex = $paramArr.Length-1;
-                        foreach ($i in @(0..$lastDex))
-                        {
-                            if ($paramArr[$i] -eq $refParam)
-                            { # remove each match (detect missing duplicate params)
-                                $newParamArr = @();
-                                foreach ($j in @(0..$lastDex-1))
-                                {
-                                    if ($j -ne $i)
-                                    { # take each val that isn't at matching param's index
-                                        $newParamArr += $paramArr[$i];
-                                    }
-                                }
-                                $paramArr = $newParamArr;
-                            }
-                        }
-                    }
-                    if ($paramArr.Length -gt 0)
-                    {
-                        $foundMismatch = $true;
-                    }
-                }
-            } 
-            else 
-            {
-                $foundMismatch = $true;
-            }
-
-            # echo $paramArr
-            if ($mismatch) 
-            {
-                $verifiedMismatches += $mismatchObject
-            }
-        }
-        if ($verifiedMismatches.Length -gt 0) 
+        echo "## $objectName";
+        foreach ($paramsId in $objectReport.Keys | sort)
         {
-            echo "## Reference:  `n`t$($referenceObject -replace "`n","`n`t")";
-            echo "###`tDetected the following Mismatch(es):`n";
-            $verifiedMismatches | % {
-                echo "`t$($mismatchObject -replace "`n","`n`t")" 
-            }
+            echo "`t[$($objectReport[$paramsId])] $paramsId"
         }
     }
 }
